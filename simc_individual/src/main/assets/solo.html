@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SIMC // INDIVIDUAL</title>
+    <!-- Chart.js para Renderizado de Gráficos Analíticos -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Courier New', Courier, monospace, -apple-system, sans-serif;
+            user-select: none;
+        }
+
+        body {
+            background-color: #030712;
+            color: #00F0FF;
+            overflow-x: hidden;
+            min-height: 100vh;
+            padding: 0;
+        }
+
+        /* Canvas de Constelación/Partículas de Fondo GPU */
+        #bgCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+            opacity: 0.4;
+        }
+
+        /* Barra Superior */
+        .top-bar {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 24px;
+            background: rgba(3, 7, 18, 0.8);
+            border-bottom: 1px solid #0E2238;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 900;
+            font-size: 16px;
+            letter-spacing: 2px;
+            color: #00F0FF;
+        }
+
+        .system-status {
+            font-size: 11px;
+            font-weight: 700;
+            padding: 4px 12px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid #1E293B;
+            color: #94A3B8;
+        }
+
+        /* Layout Principal Grid 2 Columnas */
+        .main-layout {
+            position: relative;
+            z-index: 1;
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 24px;
+            display: grid;
+            grid-template-columns: 360px 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 900px) {
+            .main-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Contenedores Cyberpunk */
+        .cyber-card {
+            background: #050C1A;
+            border: 1px solid #0E243A;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 1.5px;
+            color: #00F0FF;
+            margin-bottom: 16px;
+        }
+
+        .card-badge {
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 4px;
+            background: rgba(0, 240, 255, 0.1);
+            border: 1px solid #00F0FF;
+            color: #00F0FF;
+        }
+
+        /* Reloj Digital Cyberpunk */
+        .digital-clock {
+            font-size: 44px;
+            font-weight: 900;
+            text-align: center;
+            color: #FFFFFF;
+            letter-spacing: 4px;
+            margin: 12px 0;
+            text-shadow: 0 0 15px rgba(0, 240, 255, 0.6);
+            font-family: monospace;
+        }
+
+        .clock-sub {
+            text-align: center;
+            font-size: 11px;
+            color: #64748B;
+            margin-bottom: 16px;
+        }
+
+        /* Botones de Modo */
+        .mode-selector {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 20px;
+        }
+
+        .mode-btn {
+            flex: 1;
+            background: #0A1628;
+            border: 1px solid #102B48;
+            color: #00F0FF;
+            padding: 6px 4px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .mode-btn.active {
+            background: #00F0FF;
+            color: #030712;
+            box-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
+        }
+
+        /* Acciones Principal */
+        .action-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-action {
+            flex: 1;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 800;
+            cursor: pointer;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .btn-start-session {
+            background: #00F0FF;
+            color: #030712;
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.4);
+        }
+
+        .btn-stop-session {
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid #EF4444;
+            color: #EF4444;
+        }
+
+        /* Estado del Foco */
+        .foco-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px;
+            background: #030814;
+            border-radius: 6px;
+            border: 1px solid #0E2238;
+        }
+
+        .foco-icon {
+            font-size: 20px;
+            background: #0A1B30;
+            padding: 8px;
+            border-radius: 6px;
+        }
+
+        /* Secciones Derecha */
+        .empty-placeholder {
+            text-align: center;
+            color: #475569;
+            font-size: 12px;
+            padding: 24px 12px;
+        }
+
+        /* Gráficos Grid */
+        .charts-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-top: 16px;
+        }
+
+        @media (max-width: 700px) {
+            .charts-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .chart-box {
+            background: #030814;
+            border: 1px solid #0E2238;
+            border-radius: 8px;
+            padding: 12px;
+        }
+
+        .chart-box-title {
+            font-size: 11px;
+            color: #00F0FF;
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+
+        .chart-wrapper {
+            position: relative;
+            height: 160px;
+            width: 100%;
+        }
+
+        /* Lista de Apps */
+        .app-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            background: #030814;
+            border: 1px solid #0E2238;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            font-size: 11px;
+        }
+
+        .app-tag {
+            font-size: 9px;
+            padding: 2px 6px;
+            border-radius: 3px;
+            margin-left: 6px;
+        }
+
+        .tag-prod { background: rgba(74, 222, 128, 0.2); color: #4ADE80; }
+        .tag-ocio { background: rgba(248, 113, 113, 0.2); color: #F87171; }
+    </style>
+</head>
+<body>
+
+    <!-- Partículas Canvas GPU -->
+    <canvas id="bgCanvas"></canvas>
+
+    <!-- Barra Superior -->
+    <div class="top-bar">
+        <div class="brand">
+            <span>🧠 SIMC</span>
+            <span style="color: #475569;">// INDIVIDUAL</span>
+        </div>
+        <div class="system-status" id="sysStatus">● INACTIVO</div>
+    </div>
+
+    <!-- Layout Grid -->
+    <div class="main-layout">
+
+        <!-- Columna Izquierda: Temporizador y Estado -->
+        <div class="left-col">
+
+            <!-- Tarjeta Sesión de Enfoque -->
+            <div class="cyber-card">
+                <div class="card-header">
+                    <span>👤 SESIÓN DE ENFOQUE</span>
+                    <span class="card-badge" id="modeBadge">MODO LIBRE</span>
+                </div>
+
+                <div class="digital-clock" id="clockDisplay">00:00:00</div>
+                <div class="clock-sub">Tocá Iniciar para comenzar tu sesión de estudio</div>
+
+                <div class="mode-selector">
+                    <button class="mode-btn active" onclick="setMode('libre')">Libre</button>
+                    <button class="mode-btn" onclick="setMode('25m')">25m Focus</button>
+                    <button class="mode-btn" onclick="setMode('45m')">45m Estudio</button>
+                    <button class="mode-btn" onclick="setMode('60m')">60m Deep</button>
+                </div>
+
+                <div class="action-row">
+                    <button class="btn-action btn-start-session" id="btnAction" onclick="toggleSession()">
+                        ▶ Iniciar Sesión
+                    </button>
+                    <button class="btn-action btn-stop-session" onclick="resetSession()">
+                        ⬛ Detener
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tarjeta Estado del Foco -->
+            <div class="cyber-card">
+                <div class="card-header">
+                    <span>📱 ESTADO DEL FOCO</span>
+                </div>
+                <div class="foco-info">
+                    <div class="foco-icon">💻</div>
+                    <div>
+                        <div style="font-size: 12px; font-weight: 700; color: #F8FAFC;" id="focoTitle">Esperando inicio de sesión...</div>
+                        <span class="card-badge" style="font-size: 9px; margin-top: 4px; display: inline-block;" id="focoSub">SIN ACTIVIDAD</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Columna Derecha: Alertas, Registro, Apps y Gráficos -->
+        <div class="right-col">
+
+            <!-- Alertas y Distracciones -->
+            <div class="cyber-card">
+                <div class="card-header">
+                    <span>🔔 ALERTAS Y DISTRACCIONES</span>
+                    <span class="card-badge" style="border-color: #EF4444; color: #EF4444;" id="alertCount">0</span>
+                </div>
+                <div class="empty-placeholder" id="alertBox">
+                    🛡️ Sin alertas. ¡Buen trabajo manteniendo el foco!
+                </div>
+            </div>
+
+            <!-- Registro de Sesión -->
+            <div class="cyber-card">
+                <div class="card-header">
+                    <span>📋 REGISTRO DE SESIÓN</span>
+                </div>
+                <div class="empty-placeholder" id="sessionLog">
+                    Iniciá la sesión para comenzar el registro.
+                </div>
+            </div>
+
+            <!-- Dashboard de 4 Gráficos Analíticos -->
+            <div class="cyber-card">
+                <div class="card-header">
+                    <span>📊 MÉTRICAS Y DÉFICIT DE ATENCIÓN</span>
+                    <button onclick="resetearMétricas()" style="background: rgba(239, 68, 68, 0.15); border: 1px solid #EF4444; color: #EF4444; font-size: 10px; border-radius: 4px; padding: 2px 8px; cursor: pointer;">🗑️ Reset</button>
+                </div>
+
+                <div class="charts-container">
+                    <!-- Gráfico 1: Anillo Balance -->
+                    <div class="chart-box">
+                        <div class="chart-box-title">🍩 Balance Foco vs. Ocio</div>
+                        <div class="chart-wrapper">
+                            <canvas id="chartBalance"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Gráfico 2: Cronograma -->
+                    <div class="chart-box">
+                        <div class="chart-box-title">📊 Foco por Horas del Día</div>
+                        <div class="chart-wrapper">
+                            <canvas id="chartCronograma"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Gráfico 3: Conmutación Apps -->
+                    <div class="chart-box">
+                        <div class="chart-box-title">📉 Conmutación de Apps / Hora</div>
+                        <div class="chart-wrapper">
+                            <canvas id="chartFuga"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Gráfico 4: Tendencia Semanal -->
+                    <div class="chart-box">
+                        <div class="chart-box-title">🔥 Tendencia Semanal (Deep Work)</div>
+                        <div class="chart-wrapper">
+                            <canvas id="chartSemanal"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tiempo por Aplicación / Sitio -->
+            <div class="cyber-card">
+                <div class="card-header">
+                    <span>⏱️ TIEMPO POR APLICACIÓN / SITIO</span>
+                </div>
+                <div id="appsContainer">
+                    <div class="empty-placeholder">
+                        Sin datos registrados aún.
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+        // ─────────────── ESTADO Y LÓGICA ───────────────
+        let modes = {
+            'libre': 0,
+            '25m': 25 * 60,
+            '45m': 45 * 60,
+            '60m': 60 * 60
+        };
+
+        let currentMode = 'libre';
+        let seconds = 0;
+        let isRunning = false;
+        let timerInterval = null;
+
+        let stats = JSON.parse(localStorage.getItem('simc_ind_stats')) || {
+            focoSegs: 0,
+            ocioSegs: 0,
+            alertas: 0,
+            horasHoy: [0, 0, 0, 0, 0, 0],
+            fugasPorBloque: [0, 0, 0, 0],
+            semanaDeepWork: [0, 0, 0, 0, 0, 0, 0]
+        };
+
+        function formatTime(totalSecs) {
+            let h = Math.floor(totalSecs / 3600);
+            let m = Math.floor((totalSecs % 3600) / 60);
+            let s = totalSecs % 60;
+            return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+        }
+
+        function setMode(mode) {
+            if (isRunning) toggleSession();
+            currentMode = mode;
+            document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+
+            let names = { 'libre': 'MODO LIBRE', '25m': '25M FOCUS', '45m': '45M ESTUDIO', '60m': '60M DEEP' };
+            document.getElementById('modeBadge').textContent = names[mode];
+
+            seconds = mode === 'libre' ? 0 : modes[mode];
+            document.getElementById('clockDisplay').textContent = formatTime(seconds);
+        }
+
+        function toggleSession() {
+            let btn = document.getElementById('btnAction');
+            let sysStatus = document.getElementById('sysStatus');
+            let focoTitle = document.getElementById('focoTitle');
+            let focoSub = document.getElementById('focoSub');
+
+            if (isRunning) {
+                clearInterval(timerInterval);
+                isRunning = false;
+                btn.textContent = '▶ Reanudar Sesión';
+                sysStatus.textContent = '● PAUSADO';
+                sysStatus.style.color = '#F59E0B';
+                focoTitle.textContent = 'Sesión pausada';
+                focoSub.textContent = 'PAUSA TÉCNICA';
+            } else {
+                isRunning = true;
+                btn.textContent = '⏸️ Pausar Sesión';
+                sysStatus.textContent = '🟢 ENFOQUE ACTIVO';
+                sysStatus.style.color = '#4ADE80';
+                focoTitle.textContent = 'Monitoreando concentración...';
+                focoSub.textContent = 'EN TRABAJO PROFUNDO';
+
+                // Iniciar servicio nativo en segundo plano
+                if (typeof Android !== 'undefined' && Android.iniciarServicioSegundoplano) {
+                    Android.iniciarServicioSegundoplano();
+                }
+
+                document.getElementById('sessionLog').innerHTML = `
+                    <div style="font-size: 11px; color: #00F0FF;">
+                        🟢 Sesión iniciada a las ${new Date().toLocaleTimeString()}
+                    </div>
+                `;
+
+                timerInterval = setInterval(() => {
+                    if (currentMode === 'libre') {
+                        seconds++;
+                        stats.focoSegs++;
+                    } else {
+                        if (seconds > 0) {
+                            seconds--;
+                            stats.focoSegs++;
+                        } else {
+                            toggleSession();
+                            alert('🎉 ¡Sesión de Enfoque Completada!');
+                        }
+                    }
+                    document.getElementById('clockDisplay').textContent = formatTime(seconds);
+                    localStorage.setItem('simc_ind_stats', JSON.stringify(stats));
+                    updateCharts();
+                    cargarAppsNativas();
+                }, 1000);
+            }
+        }
+
+        function resetSession() {
+            if (isRunning) toggleSession();
+            setMode(currentMode);
+            if (typeof Android !== 'undefined' && Android.detenerServicioSegundoplano) {
+                Android.detenerServicioSegundoplano();
+            }
+            document.getElementById('sysStatus').textContent = '● INACTIVO';
+            document.getElementById('sysStatus').style.color = '#94A3B8';
+            document.getElementById('focoTitle').textContent = 'Esperando inicio de sesión...';
+            document.getElementById('focoSub').textContent = 'SIN ACTIVIDAD';
+        }
+
+        // ─────────────── GRÁFICOS CHART.JS ───────────────
+        let chartBalance, chartCronograma, chartFuga, chartSemanal;
+
+        function initCharts() {
+            if (typeof Chart === 'undefined') return;
+
+            let ctx1 = document.getElementById('chartBalance').getContext('2d');
+            chartBalance = new Chart(ctx1, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Productivo', 'Ocio'],
+                    datasets: [{
+                        data: [stats.focoSegs || 0, stats.ocioSegs || 0],
+                        backgroundColor: ['#00F0FF', '#EF4444'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { labels: { color: '#64748B', font: { size: 9 } } } }
+                }
+            });
+
+            let ctx2 = document.getElementById('chartCronograma').getContext('2d');
+            chartCronograma = new Chart(ctx2, {
+                type: 'bar',
+                data: {
+                    labels: ['8am', '10am', '12pm', '2pm', '4pm', '6pm'],
+                    datasets: [{
+                        label: 'Minutos',
+                        data: stats.horasHoy || [0, 0, 0, 0, 0, 0],
+                        backgroundColor: '#00F0FF',
+                        borderRadius: 3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { ticks: { color: '#475569', font: { size: 8 } }, grid: { display: false } },
+                        y: { ticks: { color: '#475569', font: { size: 8 } }, grid: { color: '#0E2238' } }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+
+            let ctx3 = document.getElementById('chartFuga').getContext('2d');
+            chartFuga = new Chart(ctx3, {
+                type: 'bar',
+                data: {
+                    labels: ['B1', 'B2', 'B3', 'B4'],
+                    datasets: [{
+                        label: 'Cambios',
+                        data: stats.fugasPorBloque || [0, 0, 0, 0],
+                        backgroundColor: '#F59E0B',
+                        borderRadius: 3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { ticks: { color: '#475569', font: { size: 8 } }, grid: { display: false } },
+                        y: { ticks: { color: '#475569', font: { size: 8 } }, grid: { color: '#0E2238' } }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+
+            let ctx4 = document.getElementById('chartSemanal').getContext('2d');
+            chartSemanal = new Chart(ctx4, {
+                type: 'line',
+                data: {
+                    labels: ['L', 'M', 'X', 'J', 'V', 'S', 'D'],
+                    datasets: [{
+                        data: stats.semanaDeepWork || [0, 0, 0, 0, 0, 0, 0],
+                        borderColor: '#8B5CF6',
+                        backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                        fill: true,
+                        tension: 0.3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { ticks: { color: '#475569', font: { size: 8 } }, grid: { display: false } },
+                        y: { ticks: { color: '#475569', font: { size: 8 } }, grid: { color: '#0E2238' } }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+
+        function updateCharts() {
+            if (chartBalance) {
+                chartBalance.data.datasets[0].data = [stats.focoSegs || 0, stats.ocioSegs || 0];
+                chartBalance.update();
+            }
+            if (chartCronograma) {
+                chartCronograma.data.datasets[0].data = stats.horasHoy || [0, 0, 0, 0, 0, 0];
+                chartCronograma.update();
+            }
+            if (chartFuga) {
+                chartFuga.data.datasets[0].data = stats.fugasPorBloque || [0, 0, 0, 0];
+                chartFuga.update();
+            }
+            if (chartSemanal) {
+                chartSemanal.data.datasets[0].data = stats.semanaDeepWork || [0, 0, 0, 0, 0, 0, 0];
+                chartSemanal.update();
+            }
+        }
+
+        function resetearMétricas() {
+            if (confirm("¿Deseas reiniciar todas las métricas y gráficos a cero?")) {
+                stats = {
+                    focoSegs: 0,
+                    ocioSegs: 0,
+                    alertas: 0,
+                    horasHoy: [0, 0, 0, 0, 0, 0],
+                    fugasPorBloque: [0, 0, 0, 0],
+                    semanaDeepWork: [0, 0, 0, 0, 0, 0, 0]
+                };
+                localStorage.setItem('simc_ind_stats', JSON.stringify(stats));
+                updateCharts();
+                document.getElementById('alertCount').textContent = '0';
+                document.getElementById('alertBox').innerHTML = '🛡️ Sin alertas. ¡Buen trabajo manteniendo el foco!';
+                alert("Métricas reiniciadas a cero.");
+            }
+        }
+
+        // ─────────────── LECTURA DE APPS NATIVAS ───────────────
+        function cargarAppsNativas() {
+            let container = document.getElementById('appsContainer');
+            if (typeof Android !== 'undefined' && Android.obtenerEstadisticasApps) {
+                try {
+                    let res = JSON.parse(Android.obtenerEstadisticasApps());
+                    if (!res.permiso) {
+                        container.innerHTML = `
+                            <div style="text-align: center; padding: 16px;">
+                                <div style="color: #F87171; font-size: 11px; margin-bottom: 8px;">Permiso de Uso Requerido para Monitoreo en Vivo</div>
+                                <button onclick="solicitarPermisoApps()" style="background: #00F0FF; color: #030712; border: none; padding: 6px 16px; border-radius: 4px; font-weight: 700; font-size: 11px; cursor: pointer;">Otorgar Permiso</button>
+                            </div>
+                        `;
+                    } else if (res.apps.length > 0) {
+                        let html = '';
+                        let totalOcio = 0;
+                        let totalProd = 0;
+
+                        res.apps.forEach(app => {
+                            let min = Math.round(app.segundos / 60);
+                            let tagClass = app.categoria === 'productiva' ? 'tag-prod' : 'tag-ocio';
+                            if (app.categoria === 'ocio') totalOcio += app.segundos;
+                            if (app.categoria === 'productiva') totalProd += app.segundos;
+
+                            html += `
+                                <div class="app-row">
+                                    <div>
+                                        <strong>${app.nombre}</strong>
+                                        <span class="app-tag ${tagClass}">${app.categoria.toUpperCase()}</span>
+                                    </div>
+                                    <div style="color: #00F0FF; font-weight: 700;">${min > 0 ? min + ' min' : '< 1 min'}</div>
+                                </div>
+                            `;
+                        });
+                        container.innerHTML = html;
+
+                        if (totalProd > 0 || totalOcio > 0) {
+                            stats.focoSegs = Math.max(stats.focoSegs, totalProd);
+                            stats.ocioSegs = Math.max(stats.ocioSegs, totalOcio);
+                            updateCharts();
+                        }
+                    }
+                } catch (e) {}
+
+                // Actualizar App Activa en tiempo real en la tarjeta Estado del Foco
+                if (Android.obtenerAppActual) {
+                    try {
+                        let appActual = Android.obtenerAppActual();
+                        if (appActual && appActual !== "SIMC Individual") {
+                            document.getElementById('focoTitle').textContent = "App activa: " + appActual;
+                            let appLower = appActual.toLowerCase();
+                            if (appLower.includes("whatsapp") || appLower.includes("youtube") || appLower.includes("tiktok") || appLower.includes("instagram")) {
+                                document.getElementById('focoSub').textContent = "DISTRACCIÓN DETECTADA";
+                                document.getElementById('focoSub').style.borderColor = "#EF4444";
+                                document.getElementById('focoSub').style.color = "#EF4444";
+                                stats.alertas++;
+                                document.getElementById('alertCount').textContent = stats.alertas;
+                                document.getElementById('alertBox').innerHTML = `
+                                    <div style="color: #EF4444; font-size: 11px;">⚠️ Atención: Usando '${appActual}' durante la sesión.</div>
+                                `;
+                            } else {
+                                document.getElementById('focoSub').textContent = "TRABAJO PROFUNDO";
+                                document.getElementById('focoSub').style.borderColor = "#00F0FF";
+                                document.getElementById('focoSub').style.color = "#00F0FF";
+                            }
+                        }
+                    } catch (e) {}
+                }
+            }
+        }
+
+        function solicitarPermisoApps() {
+            if (typeof Android !== 'undefined' && Android.solicitarPermisoUso) {
+                Android.solicitarPermisoUso();
+            }
+        }
+
+        // ─────────────── CANVAS PARTÍCULAS CONSTELACIÓN ───────────────
+        function initParticles() {
+            let canvas = document.getElementById('bgCanvas');
+            let ctx = canvas.getContext('2d');
+            let w = canvas.width = window.innerWidth;
+            let h = canvas.height = window.innerHeight;
+
+            let pts = [];
+            for (let i = 0; i < 45; i++) {
+                pts.push({
+                    x: Math.random() * w,
+                    y: Math.random() * h,
+                    vx: (Math.random() - 0.5) * 0.4,
+                    vy: (Math.random() - 0.5) * 0.4
+                });
+            }
+
+            function draw() {
+                ctx.clearRect(0, 0, w, h);
+                for (let i = 0; i < pts.length; i++) {
+                    let p = pts[i];
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    if (p.x < 0 || p.x > w) p.vx *= -1;
+                    if (p.y < 0 || p.y > h) p.vy *= -1;
+
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, 1.5, 0, Math.PI * 2);
+                    ctx.fillStyle = '#00F0FF';
+                    ctx.fill();
+
+                    for (let j = i + 1; j < pts.length; j++) {
+                        let p2 = pts[j];
+                        let dist = Math.hypot(p.x - p2.x, p.y - p2.y);
+                        if (dist < 110) {
+                            ctx.beginPath();
+                            ctx.moveTo(p.x, p.y);
+                            ctx.lineTo(p2.x, p2.y);
+                            ctx.strokeStyle = `rgba(0, 240, 255, ${0.15 * (1 - dist / 110)})`;
+                            ctx.stroke();
+                        }
+                    }
+                }
+                requestAnimationFrame(draw);
+            }
+            draw();
+
+            window.addEventListener('resize', () => {
+                w = canvas.width = window.innerWidth;
+                h = canvas.height = window.innerHeight;
+            });
+        }
+
+        window.onload = function() {
+            initParticles();
+            initCharts();
+            cargarAppsNativas();
+            setInterval(cargarAppsNativas, 2000);
+        };
+    </script>
+</body>
+</html>

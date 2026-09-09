@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#0F172A"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="24dp">
+
+        <!-- Encabezado Oficial SIMC -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="16dp"
+            android:text="SIMC MÓVIL"
+            android:textColor="#38BDF8"
+            android:textSize="26sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginBottom="24dp"
+            android:text="Agente de Monitoreo y Control"
+            android:textColor="#94A3B8"
+            android:textSize="14sp" />
+
+        <!-- Tarjeta de Estado de Conexión -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="20dp"
+            app:cardBackgroundColor="#1E293B"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="4dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:id="@+id/txtStatus"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="🔴 Desconectado"
+                    android:textColor="#F87171"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/txtAppActual"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:text="App actual: Ninguna"
+                    android:textColor="#94A3B8"
+                    android:textSize="13sp" />
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- Configuración de Conexión: URL BLOQUEADA -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="6dp"
+            android:text="Servidor Oficial (Bloqueado)"
+            android:textColor="#E2E8F0"
+            android:textSize="13sp" />
+
+        <EditText
+            android:id="@+id/etServer"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginBottom="14dp"
+            android:background="#1E293B"
+            android:text="https://app.simc.space"
+            android:enabled="false"
+            android:focusable="false"
+            android:clickable="false"
+            android:paddingHorizontal="14dp"
+            android:textColor="#94A3B8"
+            android:textSize="14sp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="6dp"
+            android:text="Token de la Sala"
+            android:textColor="#E2E8F0"
+            android:textSize="13sp" />
+
+        <EditText
+            android:id="@+id/etToken"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginBottom="14dp"
+            android:background="#1E293B"
+            android:hint="ej. ABCD1234"
+            android:paddingHorizontal="14dp"
+            android:textColor="#F8FAFC"
+            android:textColorHint="#64748B"
+            android:textSize="14sp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="6dp"
+            android:text="Nombre del Alumno"
+            android:textColor="#E2E8F0"
+            android:textSize="13sp" />
+
+        <EditText
+            android:id="@+id/etAlumno"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginBottom="20dp"
+            android:background="#1E293B"
+            android:hint="ej. Marcos Celular"
+            android:paddingHorizontal="14dp"
+            android:textColor="#F8FAFC"
+            android:textColorHint="#64748B"
+            android:textSize="14sp" />
+
+        <!-- Permisos Obligatorios -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:text="Permisos Obligatorios del Sistema:"
+            android:textColor="#FBBF24"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+
+        <Button
+            android:id="@+id/btnPermisoOverlay"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:backgroundTint="#334155"
+            android:text="1. Permitir Congelar Pantalla"
+            android:textColor="#F8FAFC"
+            android:textSize="12sp" />
+
+        <Button
+            android:id="@+id/btnPermisoUso"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:backgroundTint="#334155"
+            android:text="2. Permitir Monitoreo de Apps"
+            android:textColor="#F8FAFC"
+            android:textSize="12sp" />
+
+        <Button
+            android:id="@+id/btnPermisoCamara"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:backgroundTint="#334155"
+            android:text="3. Permitir Cámara (Para Monitoreo)"
+            android:textColor="#F8FAFC"
+            android:textSize="12sp" />
+
+        <Button
+            android:id="@+id/btnPermisoPantalla"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="24dp"
+            android:backgroundTint="#334155"
+            android:text="4. Permitir Ver Pantalla al Docente"
+            android:textColor="#F8FAFC"
+            android:textSize="12sp" />
+
+        <!-- Botón Solicitar Ayuda (solo activo al estar conectado) -->
+        <Button
+            android:id="@+id/btnPedirAyuda"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:layout_marginBottom="12dp"
+            android:backgroundTint="#8B5CF6"
+            android:text="🙋‍♂️ PEDIR AYUDA AL DOCENTE"
+            android:textColor="#FFFFFF"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:visibility="gone" />
+
+        <!-- Botón Principal -->
+        <Button
+            android:id="@+id/btnConectar"
+            android:layout_width="match_parent"
+            android:layout_height="54dp"
+            android:backgroundTint="#0284C7"
+            android:text="CONECTAR AL SERVIDOR"
+            android:textColor="#FFFFFF"
+            android:textSize="15sp"
+            android:textStyle="bold" />
+
+    </LinearLayout>
+</ScrollView>
